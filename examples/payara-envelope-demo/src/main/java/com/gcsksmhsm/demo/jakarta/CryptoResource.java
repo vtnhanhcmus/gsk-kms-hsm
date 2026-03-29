@@ -27,6 +27,14 @@ public class CryptoResource {
     return "ok";
   }
 
+  /** Trả về {@code local} hoặc {@code gcp} — kiểm tra cấu hình (không lộ secret). */
+  @GET
+  @Path("/mode")
+  @Produces(MediaType.TEXT_PLAIN)
+  public String mode() {
+    return EnvelopeRuntimeConfig.mode().name().toLowerCase();
+  }
+
   /** Body: plaintext UTF-8; response: Base64 ciphertext */
   @POST
   @Path("/encrypt")

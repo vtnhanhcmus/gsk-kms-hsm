@@ -6,8 +6,8 @@ import jakarta.enterprise.context.ApplicationScoped;
 import java.security.GeneralSecurityException;
 
 /**
- * Giữ {@link EnvelopeCryptoService} (giả lập). Khởi tạo lười (lazy) để CDI không fail ở startup nếu Tink
- * lỗi — tránh cả bean {@code CryptoResource} không deploy (404 mọi endpoint).
+ * Giữ một {@link EnvelopeCryptoService} theo {@link EnvelopeRuntimeConfig}: local (Tink in-memory) hoặc
+ * GCP (GCS + KMS). Khởi tạo lười để CDI không fail ở startup.
  */
 @ApplicationScoped
 public class EnvelopeCryptoHolder {
@@ -20,12 +20,19 @@ public class EnvelopeCryptoHolder {
       synchronized (this) {
         local = crypto;
         if (local == null) {
-          local = LocalEnvelopeSimulation.newService();
+          local = createService();
           local.ensureDekOnGcs();
           crypto = local;
         }
       }
     }
     return local;
+  }
+
+  private static EnvelopeCryptoService createService() throws GeneralSecurityException {
+    if (EnvelopeRuntimeConfig.mode() == EnvelopeRuntimeConfig.Mode.GCP) {
+      return new EnvelopeCryptoService(EnvelopeRuntimeConfig.buildGcpConfig());
+    }
+    return LocalEnvelopeSimulation.newService();
   }
 }

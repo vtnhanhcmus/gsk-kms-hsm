@@ -50,7 +50,7 @@ JAR SDK nằm trong `sdk/target/`: `gcs-ksm-hsm-sdk-*.jar`, `-sources.jar`, `-ja
 
 ### Ví dụ Jakarta EE + Payara Micro
 
-Module **`examples/payara-envelope-demo`**: WAR + Payara Micro, import SDK, REST `/api/demo/*` dùng `LocalEnvelopeSimulation`. Chi tiết và lệnh chạy: [`examples/payara-envelope-demo/README.md`](examples/payara-envelope-demo/README.md).
+Module **`examples/payara-envelope-demo`**: WAR + Payara Micro, import SDK; **`ENVELOPE_MODE=local`** (mặc định) dùng giả lập, **`gcp`** dùng GCS + KMS + credential Google. Chi tiết: [`examples/payara-envelope-demo/README.md`](examples/payara-envelope-demo/README.md).
 
 ### Docker Compose (Payara Micro)
 
