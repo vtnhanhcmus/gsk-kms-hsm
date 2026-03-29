@@ -47,6 +47,11 @@ public final class GcsEncryptedKeysetStore implements EncryptedKeysetStore {
     this.objectName = Objects.requireNonNull(objectName, "objectName");
   }
 
+  /** GCS URI for this object (for logs and errors). */
+  public String gsUri() {
+    return "gs://" + bucket + "/" + objectName;
+  }
+
   private static Storage createStorage(String gcpCredentialsPath) {
     try {
       if (gcpCredentialsPath != null && !gcpCredentialsPath.trim().isEmpty()) {

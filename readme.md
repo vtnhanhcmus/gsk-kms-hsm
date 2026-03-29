@@ -133,7 +133,8 @@ Publish to Nexus / Artifactory / Maven Central: configure `distributionManagemen
 
 ### Example
 
-Minimal flow: build config → create service → ensure DEK exists on first deploy → encrypt/decrypt.
+Minimal flow: **provision** the encrypted DEK object to GCS (out of band) → create service →
+`ensureDekOnGcs()` only **checks** presence on GCS (throws if missing; **no auto-create** on GCS) → encrypt/decrypt.
 
 ```java
 EnvelopeEncryptionConfig cfg = new EnvelopeEncryptionConfig(
@@ -142,7 +143,7 @@ EnvelopeEncryptionConfig cfg = new EnvelopeEncryptionConfig(
     null);
 
 EnvelopeCryptoService crypto = new EnvelopeCryptoService(cfg);
-crypto.ensureDekOnGcs(); // idempotent: create DEK + upload if missing
+crypto.ensureDekOnGcs(); // ok if object exists; IllegalStateException if missing on GCS
 
 byte[] ct = crypto.encrypt("hello".getBytes(StandardCharsets.UTF_8));
 byte[] pt = crypto.decrypt(ct);
@@ -154,7 +155,7 @@ Use a **local Tink KEK** + **`InMemoryEncryptedKeysetStore`** — same envelope 
 
 ```java
 EnvelopeCryptoService crypto = LocalEnvelopeSimulation.newService();
-crypto.ensureDekOnGcs();
+crypto.ensureDekOnGcs(); // in-memory: creates DEK if empty
 ```
 
 Or use `new EnvelopeEncryptionConfig(...)` with a **mock/fake** `EncryptedKeysetStore` in tests.

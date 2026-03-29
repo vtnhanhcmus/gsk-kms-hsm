@@ -70,12 +70,22 @@ public final class EnvelopeCryptoService {
   }
 
   /**
-   * Ensures the DEK exists in the store: if missing, generates a new DEK keyset, wraps with the KEK, and
-   * writes to the store.
+   * On <strong>GCS</strong>: if the DEK object is missing, throws {@link IllegalStateException} — the
+   * encrypted keyset must be provisioned beforehand (no auto-create).
+   *
+   * <p>On other stores (e.g. {@link InMemoryEncryptedKeysetStore} for local simulation), if empty,
+   * generates a DEK, wraps with the KEK, and writes.
    */
   public void ensureDekOnGcs() throws GeneralSecurityException {
     if (store.exists()) {
       return;
+    }
+    if (store instanceof GcsEncryptedKeysetStore) {
+      GcsEncryptedKeysetStore gcs = (GcsEncryptedKeysetStore) store;
+      throw new IllegalStateException(
+          "DEK not found in GCS at "
+              + gcs.gsUri()
+              + "; upload the encrypted keyset first (bootstrap is not performed for GCS).");
     }
     Aead kek = kekAead();
     KeysetHandle handle = KeysetHandle.generateNew(PredefinedAeadParameters.AES128_GCM);

@@ -1,23 +1,22 @@
 @startuml
 !theme plain
-title ensureDekOnGcs() — create DEK on first run (if store is empty)
+title ensureDekOnGcs() — GCS: object must exist (else throw); in-memory: bootstrap if empty
 
 actor Caller
 participant "EnvelopeCryptoService" as svc
-participant "kekAead()\n(KMS or local)" as kek
-participant "Tink\nKeysetHandle.generateNew\n(AES128_GCM)" as gen
-participant "TinkJsonProtoKeysetFormat\nserializeEncryptedKeyset" as ser
 participant "EncryptedKeysetStore" as store
+participant "kekAead()\n(KMS or local)" as kek
+participant "Tink generate +\nserializeEncryptedKeyset" as boot
 
 Caller -> svc : ensureDekOnGcs()
-alt object already exists
+alt keyset already present
   svc -> Caller : return
-else no keyset yet
-  svc -> kek : get AEAD primitive (KEK)
-  svc -> gen : generate new DEK keyset
-  gen --> svc : KeysetHandle (DEK)
-  svc -> ser : serializeEncryptedKeyset(DEK, KEK, empty AAD)
-  ser --> svc : JSON string
+else GCS store, object missing
+  svc -> Caller : IllegalStateException\n(no auto-create)
+else in-memory (or other) store, empty
+  svc -> kek : get AEAD (KEK)
+  svc -> boot : generate DEK + serialize
+  boot --> svc : JSON
   svc -> store : writeEncryptedKeysetJson(JSON)
   svc -> Caller : return
 end
