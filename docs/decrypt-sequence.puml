@@ -1,0 +1,24 @@
+@startuml
+!theme plain
+title decrypt(ciphertext)
+
+actor Caller
+participant "EnvelopeCryptoService" as svc
+participant "kekAead()" as kek
+participant "EncryptedKeysetStore" as store
+participant "TinkJsonProtoKeysetFormat\nparseEncryptedKeyset" as parse
+participant "DEK: Aead primitive" as dekAead
+
+Caller -> svc : decrypt(ciphertext)
+svc -> kek : kekAead()
+kek --> svc : Aead (KEK)
+svc -> store : readEncryptedKeysetJson()
+store --> svc : encrypted JSON
+svc -> parse : parseEncryptedKeyset(JSON, KEK, empty AAD)
+parse --> svc : KeysetHandle (DEK)
+svc -> dekAead : getPrimitive(Aead)
+svc -> dekAead : decrypt(ciphertext, empty AAD)
+dekAead --> svc : plaintext
+svc --> Caller : plaintext
+
+@enduml
