@@ -3,9 +3,9 @@ package com.keywrap.demo.jakarta;
 import com.keywrap.crypto.EnvelopeEncryptionConfig;
 
 /**
- * Three modes: {@link Mode#LOCAL}, {@link Mode#STAGING}, {@link Mode#PROD}. Only two variables for cloud:
- * {@code GCS_DEK_URI} (gs://…) and {@code KMS_KEK_URI}. Credentials: Application Default Credentials (e.g.
- * {@code GOOGLE_APPLICATION_CREDENTIALS}).
+ * Two modes: {@link Mode#LOCAL} (in-memory simulation) and {@link Mode#GCP} (real GCS + Cloud KMS). For GCP,
+ * set {@code GCS_DEK_URI} (gs://…) and {@code KMS_KEK_URI}. Credentials: Application Default Credentials
+ * (e.g. {@code GOOGLE_APPLICATION_CREDENTIALS}).
  */
 public final class EnvelopeRuntimeConfig {
 
@@ -20,8 +20,7 @@ public final class EnvelopeRuntimeConfig {
 
   public enum Mode {
     LOCAL,
-    STAGING,
-    PROD
+    GCP
   }
 
   public static Mode mode() {
@@ -33,18 +32,23 @@ public final class EnvelopeRuntimeConfig {
       raw = "local";
     }
     raw = raw.trim();
-    if ("staging".equalsIgnoreCase(raw)) {
-      return Mode.STAGING;
-    }
-    if ("prod".equalsIgnoreCase(raw)) {
-      return Mode.PROD;
+    if (isGcpMode(raw)) {
+      return Mode.GCP;
     }
     return Mode.LOCAL;
   }
 
-  /** Use when branching (logs, metrics): staging/prod use GCS+KMS; local does not. */
+  /** Legacy names {@code staging} / {@code prod} still select GCP. */
+  private static boolean isGcpMode(String raw) {
+    return "gcp".equalsIgnoreCase(raw)
+        || "cloud".equalsIgnoreCase(raw)
+        || "staging".equalsIgnoreCase(raw)
+        || "prod".equalsIgnoreCase(raw);
+  }
+
+  /** Use when branching (logs, metrics): GCP uses GCS+KMS; local does not. */
   public static boolean usesGoogleCloud(Mode m) {
-    return m == Mode.STAGING || m == Mode.PROD;
+    return m == Mode.GCP;
   }
 
   public static EnvelopeEncryptionConfig buildCloudConfig() {
@@ -77,7 +81,7 @@ public final class EnvelopeRuntimeConfig {
         firstNonBlank(System.getenv(name), System.getProperty(toPropertyName(name)));
     if (v == null) {
       throw new IllegalStateException(
-          "Missing " + name + " when ENVELOPE_MODE=staging|prod");
+          "Missing " + name + " when ENVELOPE_MODE=gcp");
     }
     return v.trim();
   }

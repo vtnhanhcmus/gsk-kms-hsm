@@ -27,7 +27,9 @@ public final class EnvelopeCryptoService {
 
   public EnvelopeCryptoService(EnvelopeEncryptionConfig config) {
     this.config = Objects.requireNonNull(config, "config");
-    this.store = new GcsEncryptedKeysetStore(config.gcsBucket(), config.gcsObjectName());
+    this.store =
+        new GcsEncryptedKeysetStore(
+            config.gcsBucket(), config.gcsObjectName(), config.gcpCredentialsPath());
     this.fixedKekAead = null;
   }
 

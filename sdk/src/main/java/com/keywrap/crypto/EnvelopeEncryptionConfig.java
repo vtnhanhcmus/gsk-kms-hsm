@@ -14,7 +14,10 @@ public final class EnvelopeEncryptionConfig {
   private final String gcsObjectName;
   /** URI like {@code gcp-kms://projects/.../locations/.../keyRings/.../cryptoKeys/.../cryptoKeyVersions/...} */
   private final String kmsKekUri;
-  /** Path to service account JSON; null = Application Default Credentials */
+  /**
+   * Path to service account JSON for both GCS and KMS clients; null = Application Default Credentials
+   * ({@code GOOGLE_APPLICATION_CREDENTIALS}, metadata server, etc.).
+   */
   private final String gcpCredentialsPath;
 
   public EnvelopeEncryptionConfig(
@@ -37,7 +40,10 @@ public final class EnvelopeEncryptionConfig {
     return kmsKekUri;
   }
 
-  /** Nullable: if null, use ADC (GOOGLE_APPLICATION_CREDENTIALS, gcloud, etc.). */
+  /**
+   * Nullable: if null, GCS and KMS use Application Default Credentials (e.g. {@code
+   * GOOGLE_APPLICATION_CREDENTIALS}).
+   */
   public String gcpCredentialsPath() {
     return gcpCredentialsPath;
   }

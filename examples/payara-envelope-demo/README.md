@@ -4,16 +4,26 @@ Jakarta EE 10 example on **Payara Micro**, using **`keywrap-sdk`**.
 
 - **WAR** `ROOT.war` and microbundle **`ROOT-microbundle.jar`** (`finalName` = `ROOT` → context **`/`**).
 - REST: application base path **`/api`** (`JaxRsApplication`), resources under **`com.keywrap.demo.jakarta`**.
-- **`ENVELOPE_MODE`**: `local` | `staging` | `prod`. **`local`** uses `LocalEnvelopeSimulation` (no GCP). **`staging`** / **`prod`** use real GCS + KMS (same code path; differ by env at deploy time).
+- **`ENVELOPE_MODE`**: **`local`** (in-memory simulation, no GCP) or **`gcp`** (real GCS + Cloud KMS). Legacy values `staging`, `prod`, or `cloud` are treated the same as **`gcp`**.
 
-## Environment variables (only when `staging` or `prod`)
+## Environment variables (only when `ENVELOPE_MODE=gcp`)
 
 | Variable | Example |
 |----------|---------|
 | `GCS_DEK_URI` | `gs://my-bucket/path/dek.encrypted.json` |
 | `KMS_KEK_URI` | `projects/.../locations/.../keyRings/.../cryptoKeys/...` |
 
-Credentials: **Application Default Credentials** (e.g. `GOOGLE_APPLICATION_CREDENTIALS` pointing at a JSON key file).
+### How GCS (and KMS) authenticate
+
+The app does **not** define separate GCS credentials. The Google **Storage** and **KMS** clients use **Application Default Credentials**:
+
+| Setup | What to do |
+|-------|------------|
+| Service account key file | Export `GOOGLE_APPLICATION_CREDENTIALS=/path/to/key.json` before `java -jar ...` |
+| GKE / GCE | Use Workload Identity or the instance service account (ADC picks it up). |
+| Local laptop | `gcloud auth application-default login`, or set `GOOGLE_APPLICATION_CREDENTIALS`. |
+
+Optional: in your own code you can pass a path into `new EnvelopeEncryptionConfig(bucket, object, kmsUri, "/path/to/key.json")` so **both** GCS and KMS use that file (the demo uses `null` and relies on ADC).
 
 ## Build and run
 

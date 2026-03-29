@@ -27,7 +27,7 @@ public class CryptoResource {
     return "ok";
   }
 
-  /** Returns {@code local}, {@code staging}, or {@code prod}. */
+  /** Returns {@code local} or {@code gcp}. */
   @GET
   @Path("/mode")
   @Produces(MediaType.TEXT_PLAIN)

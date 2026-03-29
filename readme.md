@@ -69,7 +69,7 @@ Install the reactor locally first: `mvn clean install` from the repo root.
 
 ### Jakarta EE + Payara Micro example
 
-See **`examples/payara-envelope-demo`**.
+See **`examples/payara-envelope-demo`**. Runtime mode is **`ENVELOPE_MODE=local`** (default, no GCP) or **`gcp`** with `GCS_DEK_URI` and `KMS_KEK_URI`.
 
 Build the microbundle:
 
@@ -105,6 +105,20 @@ To make the JVM **wait for the debugger** before continuing: change `suspend=n` 
 ```bash
 docker compose -f docker-compose.yml -f docker-compose.debug.yml up --build
 ```
+
+### Credentials (GCS + KMS)
+
+There is **no custom “GCS username/password”** in this SDK. Both **Cloud Storage** and **Cloud KMS** use Google’s Java clients, which authenticate with **Application Default Credentials (ADC)**:
+
+1. **Recommended in production:** set **`GOOGLE_APPLICATION_CREDENTIALS`** to the path of a service account JSON key (or use **Workload Identity** on GKE / the metadata service on GCE so ADC is automatic).
+2. **Local dev:** run `gcloud auth application-default login`, or point `GOOGLE_APPLICATION_CREDENTIALS` at a key file.
+
+In code, `EnvelopeEncryptionConfig(..., gcpCredentialsPath)`:
+
+- **`gcpCredentialsPath == null`** — GCS and KMS use ADC (same as `StorageOptions.getDefaultInstance()` and `GcpKmsClient.withDefaultCredentials()`).
+- **`gcpCredentialsPath` set** — that JSON file is used for **both** the GCS `Storage` client and the KMS AEAD (explicit file instead of env).
+
+The Payara demo passes **`null`** and expects ADC via the environment (e.g. `GOOGLE_APPLICATION_CREDENTIALS` when you run the JAR or container).
 
 ### IAM (GCP)
 

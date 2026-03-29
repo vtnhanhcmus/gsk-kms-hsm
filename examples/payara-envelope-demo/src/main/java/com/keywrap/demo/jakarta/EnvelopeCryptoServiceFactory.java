@@ -22,9 +22,7 @@ public final class EnvelopeCryptoServiceFactory {
         // No GCS/KMS — keys in RAM (Tink simulation)
         return LocalEnvelopeSimulation.newService();
 
-      case STAGING:
-      case PROD:
-        // Same GCS + KMS stack; staging vs prod differ via env (GCS_DEK_URI, KMS_KEK_URI) per deployment
+      case GCP:
         return new EnvelopeCryptoService(EnvelopeRuntimeConfig.buildCloudConfig());
 
       default:
