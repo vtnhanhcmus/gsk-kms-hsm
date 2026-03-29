@@ -4,12 +4,12 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>com.gcsksmhsm</groupId>
+  <groupId>com.keywrap</groupId>
   <artifactId>gcs-ksm-hsm</artifactId>
   <version>1.0.0-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>gcs-ksm-hsm</name>
-  <description>Reactor: SDK + ví dụ Jakarta EE / Payara</description>
+  <description>Reactor: SDK + Jakarta EE / Payara example</description>
 
   <modules>
     <module>sdk</module>
@@ -35,8 +35,8 @@
         <scope>import</scope>
       </dependency>
       <dependency>
-        <groupId>com.gcsksmhsm</groupId>
-        <artifactId>gcs-ksm-hsm-sdk</artifactId>
+        <groupId>com.keywrap</groupId>
+        <artifactId>keywrap-sdk</artifactId>
         <version>${project.version}</version>
       </dependency>
     </dependencies>

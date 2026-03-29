@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: gcs-ksm-hsm-payara-demo:local
+    image: keywrap-payara-demo:local
     ports:
       - "8080:8080"
     environment:

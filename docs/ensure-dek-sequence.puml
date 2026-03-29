@@ -1,20 +1,20 @@
 @startuml
 !theme plain
-title ensureDekOnGcs() — tạo DEK lần đầu (nếu store chưa có)
+title ensureDekOnGcs() — create DEK on first run (if store is empty)
 
 actor Caller
 participant "EnvelopeCryptoService" as svc
-participant "kekAead()\n(KMS hoặc local)" as kek
+participant "kekAead()\n(KMS or local)" as kek
 participant "Tink\nKeysetHandle.generateNew\n(AES128_GCM)" as gen
 participant "TinkJsonProtoKeysetFormat\nserializeEncryptedKeyset" as ser
 participant "EncryptedKeysetStore" as store
 
 Caller -> svc : ensureDekOnGcs()
-alt store đã tồn tại
+alt object already exists
   svc -> Caller : return
-else chưa có keyset
-  svc -> kek : lấy primitive AEAD (KEK)
-  svc -> gen : sinh keyset DEK mới
+else no keyset yet
+  svc -> kek : get AEAD primitive (KEK)
+  svc -> gen : generate new DEK keyset
   gen --> svc : KeysetHandle (DEK)
   svc -> ser : serializeEncryptedKeyset(DEK, KEK, empty AAD)
   ser --> svc : JSON string

@@ -1,8 +1,8 @@
-package com.gcsksmhsm.demo.jakarta;
+package com.keywrap.demo.jakarta;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-import com.gcsksmhsm.crypto.EnvelopeCryptoService;
+import com.keywrap.crypto.EnvelopeCryptoService;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
@@ -27,7 +27,7 @@ public class CryptoResource {
     return "ok";
   }
 
-  /** Trả về {@code local} hoặc {@code gcp} — kiểm tra cấu hình (không lộ secret). */
+  /** Returns {@code local}, {@code staging}, or {@code prod}. */
   @GET
   @Path("/mode")
   @Produces(MediaType.TEXT_PLAIN)

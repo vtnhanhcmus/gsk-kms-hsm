@@ -1,12 +1,12 @@
-package com.gcsksmhsm.demo.jakarta;
+package com.keywrap.demo.jakarta;
 
 import jakarta.ws.rs.ApplicationPath;
 import jakarta.ws.rs.core.Application;
 import java.util.Set;
 
 /**
- * Payara/Jersey: cần khai báo rõ lớp resource; chỉ {@code Application} rỗng dễ dẫn tới 404 (không mount
- * REST).
+ * Payara/Jersey: resources must be registered explicitly; an empty {@code Application} alone often yields 404
+ * (REST not mounted).
  */
 @ApplicationPath("/api")
 public class JaxRsApplication extends Application {

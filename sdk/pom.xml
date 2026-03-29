@@ -5,19 +5,19 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>com.gcsksmhsm</groupId>
+    <groupId>com.keywrap</groupId>
     <artifactId>gcs-ksm-hsm</artifactId>
     <version>1.0.0-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
-  <artifactId>gcs-ksm-hsm-sdk</artifactId>
+  <artifactId>keywrap-sdk</artifactId>
   <packaging>jar</packaging>
-  <name>gcs-ksm-hsm-sdk</name>
-  <description>SDK envelope encryption (Tink DEK trên GCS, KEK Cloud KMS). HSM qua KMS protection level.</description>
+  <name>keywrap-sdk</name>
+  <description>Envelope encryption SDK (Tink DEK on GCS, Cloud KMS KEK). HSM via KMS protection level.</description>
 
   <properties>
-    <!-- Bytecode Java 8; runtime vẫn cần JRE 11+ do google-cloud-storage / gRPC (xem readme) -->
+    <!-- Java 8 bytecode; runtime still requires JRE 11+ for google-cloud-storage / gRPC (see readme) -->
     <maven.compiler.release>8</maven.compiler.release>
   </properties>
 

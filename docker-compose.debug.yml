@@ -1,5 +1,5 @@
-# Dùng kèm docker-compose.yml để bật JDWP (remote debug port 5005).
-# Chạy: docker compose -f docker-compose.yml -f docker-compose.debug.yml up --build
+# Use with docker-compose.yml to enable JDWP (remote debug on port 5005).
+# Run: docker compose -f docker-compose.yml -f docker-compose.debug.yml up --build
 services:
   payara-demo:
     ports:

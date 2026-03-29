@@ -1,8 +1,8 @@
-package com.gcsksmhsm.crypto;
+package com.keywrap.crypto;
 
 import java.util.concurrent.atomic.AtomicReference;
 
-/** Giả lập object GCS trong RAM — dùng cho test / dev không có GCP. */
+/** In-RAM stand-in for a GCS object — for tests / dev without GCP. */
 public final class InMemoryEncryptedKeysetStore implements EncryptedKeysetStore {
 
   private final AtomicReference<String> content = new AtomicReference<>();
@@ -16,7 +16,7 @@ public final class InMemoryEncryptedKeysetStore implements EncryptedKeysetStore 
   public String readEncryptedKeysetJson() {
     String s = content.get();
     if (s == null) {
-      throw new IllegalStateException("Chưa có keyset trong InMemoryEncryptedKeysetStore");
+      throw new IllegalStateException("No keyset in InMemoryEncryptedKeysetStore yet");
     }
     return s;
   }

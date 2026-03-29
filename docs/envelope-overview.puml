@@ -1,22 +1,22 @@
 @startuml
 !theme plain
-title Envelope encryption — tổng quan (DEK trong store, KEK bọc keyset)
+title Envelope encryption — overview (DEK in store, KEK wraps keyset)
 
 rectangle "KEK\n(Key Encryption Key)" as kek #LightBlue
 note right of kek
   Production: **Cloud KMS** (GcpKmsAead)
-  Giả lập: **Tink AES-GCM** cục bộ
+  Simulation: local **Tink AES-GCM**
 end note
 
-rectangle "EncryptedKeysetStore\n(GCS hoặc InMemory)" as store #Wheat
+rectangle "EncryptedKeysetStore\n(GCS or InMemory)" as store #Wheat
 note bottom of store
-  File JSON: keyset DEK đã mã hóa
+  JSON file: encrypted DEK keyset
   (**TinkJsonProtoKeysetFormat**)
 end note
 
-rectangle "DEK keyset\n(AES-128-GCM trong Tink)" as dek #LightGreen
+rectangle "DEK keyset\n(AES-128-GCM in Tink)" as dek #LightGreen
 
-kek -down-> store : bọc / giải bọc\nblob keyset
-store -down-> dek : sau khi parse bằng KEK
+kek -down-> store : wrap / unwrap\nkeyset blob
+store -down-> dek : after parse with KEK
 
 @enduml

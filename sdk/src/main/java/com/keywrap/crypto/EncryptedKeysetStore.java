@@ -1,6 +1,6 @@
-package com.gcsksmhsm.crypto;
+package com.keywrap.crypto;
 
-/** Lưu JSON keyset Tink đã được bọc bởi KEK (GCS, in-memory, hoặc mock khác). */
+/** Persists Tink keyset JSON wrapped by the KEK (GCS, in-memory, or another mock). */
 public interface EncryptedKeysetStore {
 
   boolean exists();

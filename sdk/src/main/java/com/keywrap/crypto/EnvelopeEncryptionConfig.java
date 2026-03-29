@@ -1,20 +1,20 @@
-package com.gcsksmhsm.crypto;
+package com.keywrap.crypto;
 
 import java.util.Objects;
 
 /**
- * Cấu hình envelope encryption: DEK (Tink keyset) lưu trên GCS, được bọc bởi KEK trên Cloud KMS.
+ * Envelope encryption settings: DEK (Tink keyset) on GCS, wrapped by a KEK in Cloud KMS.
  *
- * <p>HSM: tạo CryptoKey trên KMS với {@code protection_level = HSM} để master key nằm trên HSM
- * của Google; ứng dụng vẫn gọi KMS qua API như khóa thường.
+ * <p>HSM: create the CryptoKey in KMS with {@code protection_level = HSM} so the master key stays in
+ * Google’s HSM; the app still calls KMS over the API like a normal key.
  */
 public final class EnvelopeEncryptionConfig {
 
   private final String gcsBucket;
   private final String gcsObjectName;
-  /** URI dạng {@code gcp-kms://projects/.../locations/.../keyRings/.../cryptoKeys/.../cryptoKeyVersions/...} */
+  /** URI like {@code gcp-kms://projects/.../locations/.../keyRings/.../cryptoKeys/.../cryptoKeyVersions/...} */
   private final String kmsKekUri;
-  /** Đường tới JSON service account; null = Application Default Credentials */
+  /** Path to service account JSON; null = Application Default Credentials */
   private final String gcpCredentialsPath;
 
   public EnvelopeEncryptionConfig(
@@ -37,7 +37,7 @@ public final class EnvelopeEncryptionConfig {
     return kmsKekUri;
   }
 
-  /** Nullable: nếu null thì dùng ADC (GOOGLE_APPLICATION_CREDENTIALS, gcloud, v.v.). */
+  /** Nullable: if null, use ADC (GOOGLE_APPLICATION_CREDENTIALS, gcloud, etc.). */
   public String gcpCredentialsPath() {
     return gcpCredentialsPath;
   }

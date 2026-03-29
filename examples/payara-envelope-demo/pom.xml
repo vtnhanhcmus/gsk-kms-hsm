@@ -5,7 +5,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>com.gcsksmhsm</groupId>
+    <groupId>com.keywrap</groupId>
     <artifactId>gcs-ksm-hsm</artifactId>
     <version>1.0.0-SNAPSHOT</version>
     <relativePath>../../pom.xml</relativePath>
@@ -14,7 +14,7 @@
   <artifactId>payara-envelope-demo</artifactId>
   <packaging>war</packaging>
   <name>payara-envelope-demo</name>
-  <description>Ví dụ Jakarta EE 10 trên Payara Micro, dùng gcs-ksm-hsm-sdk (giả lập LocalEnvelopeSimulation)</description>
+  <description>Jakarta EE 10 on Payara Micro using keywrap-sdk (LocalEnvelopeSimulation for local mode)</description>
 
   <properties>
     <maven.compiler.release>17</maven.compiler.release>
@@ -28,13 +28,13 @@
       <scope>provided</scope>
     </dependency>
     <dependency>
-      <groupId>com.gcsksmhsm</groupId>
-      <artifactId>gcs-ksm-hsm-sdk</artifactId>
+      <groupId>com.keywrap</groupId>
+      <artifactId>keywrap-sdk</artifactId>
     </dependency>
   </dependencies>
 
   <build>
-    <!-- ROOT.war → context "/" (curl /api/... không cần prefix tên WAR) -->
+    <!-- ROOT.war → context "/" (curl /api/... without WAR name prefix) -->
     <finalName>ROOT</finalName>
     <plugins>
       <plugin>

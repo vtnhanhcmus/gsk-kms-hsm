@@ -1,4 +1,4 @@
-package com.gcsksmhsm.crypto;
+package com.keywrap.crypto;
 
 import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.BlobId;
@@ -8,7 +8,7 @@ import com.google.cloud.storage.StorageOptions;
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 
-/** Đọc/ghi nội dung keyset Tink đã mã hóa bởi KMS (JSON) lên một object GCS. */
+/** Reads/writes KMS-encrypted Tink keyset JSON to a GCS object. */
 public final class GcsEncryptedKeysetStore implements EncryptedKeysetStore {
 
   private final Storage storage;
@@ -36,7 +36,7 @@ public final class GcsEncryptedKeysetStore implements EncryptedKeysetStore {
     BlobId id = BlobId.of(bucket, objectName);
     Blob blob = storage.get(id);
     if (blob == null) {
-      throw new IllegalStateException("GCS object không tồn tại: gs://" + bucket + "/" + objectName);
+      throw new IllegalStateException("GCS object does not exist: gs://" + bucket + "/" + objectName);
     }
     return new String(blob.getContent(), StandardCharsets.UTF_8);
   }

@@ -1,173 +1,163 @@
-Application (dạng lib dùng pom.xml)
-       │
-       ▼
-Google Tink
-   │
-   ▼
-KMS (encrypt key)
-   │
-   ▼
-HSM (protect master key)
+# gcs-ksm-hsm
 
+Envelope encryption with **Tink** (DEK on **GCS**, KEK on **Cloud KMS**). The KEK can use **HSM** protection level in KMS (no PKCS#11 in the app).
 
-Envelope Encryption (DEK + KEK)
-Dek file duoc lay tu GCS
-
----
-
-## SDK `gcs-ksm-hsm-sdk` (Maven)
-
-Maven coordinates:
-
-| | |
-|---|---|
-| **groupId** | `com.gcsksmhsm` |
-| **artifactId** | `gcs-ksm-hsm-sdk` |
-| **version** | `1.0.0-SNAPSHOT` (đổi khi release) |
-
-- **DEK**: keyset Tink (AES-128-GCM), file JSON **đã mã hóa** lưu trên **GCS**.
-- **KEK**: khóa **Cloud KMS**; Tink dùng `GcpKmsClient` để bọc/giải bọc file DEK.
-- **HSM**: tạo CryptoKey trên KMS với **protection level HSM** — master key nằm trong HSM của Google, không cần PKCS#11 trong app.
-
-**Dependency kéo theo (transitive):** `tink`, `tink-gcpkms`, `google-cloud-storage` — không cần khai báo lại trừ khi bạn ép version khác.
-
-**Java:** SDK được biên dịch với **bytecode Java 8** (`--release 8`) để app cũ vẫn import được API cấp 8. **Khi chạy**, JVM vẫn phải **11+** vì các thư viện Google Cloud / gRPC kéo theo không còn hỗ trợ JRE 8. (Nếu bạn chỉ dùng nhánh giả lập `InMemoryEncryptedKeysetStore` + KEK cục bộ và loại bỏ dependency GCS/KMS, có thể tách thành module riêng — mặc định hiện tại không hỗ trợ chạy trên JRE 8.)
-
-### Cấu trúc repo
-
-- **`pom.xml`** (gốc): reactor Maven, gồm module **`sdk/`** và **`examples/payara-envelope-demo/`**.
-- **`sdk/`**: mã nguồn + `pom.xml` của **`gcs-ksm-hsm-sdk`** (artifact JAR).
-
-### Build SDK trong repo này
-
-Từ thư mục gốc:
-
-```bash
-mvn clean install
+```
+┌─────────────┐     wrap/unwrap      ┌──────────────┐
+│ Cloud KMS   │◄────────────────────►│  Tink DEK    │
+│ (KEK, HSM)  │                      │ (AES-GCM…)   │
+└─────────────┘                      └──────┬───────┘
+                                          │ read/write ciphertext
+                                          ▼
+                                   ┌──────────────┐
+                                   │ GCS object   │
+                                   │ (encrypted   │
+                                   │  keyset)     │
+                                   └──────────────┘
 ```
 
-JAR SDK nằm trong `sdk/target/`: `gcs-ksm-hsm-sdk-*.jar`, `-sources.jar`, `-javadoc.jar`.
+## Modules
 
-### Ví dụ Jakarta EE + Payara Micro
+| Module | Role |
+|--------|------|
+| **`sdk`** | `keywrap-sdk` — envelope API (Tink + GCS + KMS) |
+| **`examples/payara-envelope-demo`** | Jakarta EE 10 + Payara Micro — REST demo |
 
-Module **`examples/payara-envelope-demo`**: WAR + Payara Micro, import SDK; **`ENVELOPE_MODE=local`** (mặc định) dùng giả lập, **`gcp`** dùng GCS + KMS + credential Google. Chi tiết: [`examples/payara-envelope-demo/README.md`](examples/payara-envelope-demo/README.md).
+**Coordinates (reactor root `pom.xml`):**
 
-### Docker Compose (Payara Micro)
+| Field | Value |
+|-------|-------|
+| **groupId** | `com.keywrap` |
+| **artifactId (sdk)** | `keywrap-sdk` |
+| **version** | `1.0.0-SNAPSHOT` (bump when releasing) |
 
-Cần **Docker** + **Docker Compose v2**. Từ thư mục gốc repo:
+## SDK (`sdk`)
+
+- **DEK**: Tink keyset, stored encrypted on GCS (object URI you configure).
+- **KEK**: Cloud KMS key — create a symmetric key with purpose **encrypt/decrypt**; choose **HSM** protection level if required.
+- **HSM**: create the CryptoKey in KMS with **HSM** protection level — the master key stays in Google’s HSM; no PKCS#11 in the app.
+
+**Transitive dependencies:** `tink`, `tink-gcpkms`, `google-cloud-storage` — you do not need to declare them again unless you pin versions.
+
+**Java:** the SDK is compiled with **Java 8 bytecode** (`--release 8`) so older apps can still use the level-8 API. **At runtime**, the JVM must still be **11+** because Google Cloud / gRPC libraries no longer support JRE 8. (If you only use the `InMemoryEncryptedKeysetStore` simulation path with a local KEK and remove GCS/KMS dependencies, you could split a separate module — the default setup does not support JRE 8.)
+
+### Usage (Maven)
+
+Add the BOM (optional but recommended) and the SDK:
+
+```xml
+<dependencyManagement>
+  <dependencies>
+    <dependency>
+      <groupId>com.google.cloud</groupId>
+      <artifactId>libraries-bom</artifactId>
+      <version>26.50.0</version>
+      <type>pom</type>
+      <scope>import</scope>
+    </dependency>
+  </dependencies>
+</dependencyManagement>
+
+<dependency>
+  <groupId>com.keywrap</groupId>
+  <artifactId>keywrap-sdk</artifactId>
+  <version>1.0.0-SNAPSHOT</version>
+</dependency>
+```
+
+Install the reactor locally first: `mvn clean install` from the repo root.
+
+### Jakarta EE + Payara Micro example
+
+See **`examples/payara-envelope-demo`**.
+
+Build the microbundle:
+
+```bash
+cd examples/payara-envelope-demo
+mvn -q clean package
+java -jar target/ROOT-microbundle.jar
+```
+
+REST base path: **`/api`** (e.g. `GET http://localhost:8080/api/demo/ping`).
+
+**Docker Compose** (8080):
 
 ```bash
 docker compose up --build
 ```
 
-Payara Micro **khởi động chậm** (thường **30–60 giây**); đợi log có dạng *Payara Micro.* sẵn sàng rồi mới gọi HTTP.
-
-Ứng dụng lắng nghe **8080**. WAR build dưới dạng **`ROOT.war`** → context **`/`**, nên ping:
-
-```bash
-curl -s http://127.0.0.1:8080/api/demo/ping
-```
-
-(kỳ vọng: `ok`).
-
-`Dockerfile`: multi-stage (Maven 17 → JRE 17), chạy `ROOT-microbundle.jar` với `--nocluster` (tránh Hazelcast/cluster trong container).
-
-#### Remote debug từ IntelliJ IDEA (Docker)
-
-1. Chạy container có **JDWP** (port **5005**):
-
-   ```bash
-   docker compose -f docker-compose.yml -f docker-compose.debug.yml up --build
-   ```
-
-2. Trong IntelliJ: **Run → Edit Configurations → + → Remote JVM Debug** (hoặc dùng sẵn **“Remote Debug Payara (localhost:5005)”** trong `.idea/runConfigurations/` sau khi **Reload Maven Project**).
-   - Host: `localhost`, Port: `5005`, **Debugger mode**: `Attach to remote JVM`.
-   - Ở mục **Use module classpath**, chọn module **`payara-envelope-demo`** để breakpoint khớp source.
-
-3. **Debug** (icon bọ cạnh) — đợi Payara khởi động xong rồi mới attach (hoặc để attach trước cũng được nếu dùng `suspend=y`, xem dưới).
-
-**Chạy JAR local (không Docker)** với JDWP:
+**Run the JAR locally (no Docker)** with JDWP:
 
 ```bash
 cd examples/payara-envelope-demo
-mvn package -DskipTests
+mvn -q clean package
 java -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005 \
-  -jar target/ROOT-microbundle.jar --nocluster
+  -jar target/ROOT-microbundle.jar
 ```
 
-Muốn JVM **đợi debugger** trước khi chạy tiếp: đổi `suspend=n` thành `suspend=y`.
+Attach the debugger to port **5005** (e.g. IntelliJ: Run → Attach to Process / Remote JVM Debug).
 
-### Đưa SDK vào project khác (local)
+To make the JVM **wait for the debugger** before continuing: change `suspend=n` to `suspend=y`.
 
-Từ thư mục gốc repo (build module `sdk`):
+**Compose with debug** (exposes 5005):
 
 ```bash
-mvn clean install
+docker compose -f docker-compose.yml -f docker-compose.debug.yml up --build
 ```
 
-Sau đó trong app consumer (cùng máy, `~/.m2/repository`):
+### IAM (GCP)
 
-**Maven (`pom.xml`):**
+Typical roles for the runtime identity:
 
-```xml
-<dependency>
-  <groupId>com.gcsksmhsm</groupId>
-  <artifactId>gcs-ksm-hsm-sdk</artifactId>
-  <version>1.0.0-SNAPSHOT</version>
-</dependency>
-```
+- **KMS**: `cloudkms.cryptoKeyEncrypterDecrypter` on the KEK (or a custom role with `cryptoKeys.encrypt`, `cryptoKeys.decrypt`).
+- **GCS**: read/write the DEK object (e.g. `storage.objects.get/create/update`).
 
-**Gradle (Kotlin DSL) `build.gradle.kts`:**
+### Publishing
 
-```kotlin
-repositories { mavenLocal() }
-dependencies {
-  implementation("com.gcsksmhsm:gcs-ksm-hsm-sdk:1.0.0-SNAPSHOT")
-}
-```
+Publish to Nexus / Artifactory / Maven Central: configure `distributionManagement` + `mvn deploy` (often with signing). See comments in the POMs for hints.
 
-**Gradle (Groovy) `build.gradle`:**
+### Example
 
-```groovy
-repositories { mavenLocal() }
-dependencies {
-  implementation 'com.gcsksmhsm:gcs-ksm-hsm-sdk:1.0.0-SNAPSHOT'
-}
-```
-
-Publish lên Nexus / Artifactory / Maven Central: cấu hình `distributionManagement` + `mvn deploy` (thường kèm signing). Trong `pom.xml` có comment gợi ý.
-
-### Ví dụ
+Minimal flow: build config → create service → ensure DEK exists on first deploy → encrypt/decrypt.
 
 ```java
 EnvelopeEncryptionConfig cfg = new EnvelopeEncryptionConfig(
-    "my-bucket",
-    "crypto/dek.encrypted.json",
-    "gcp-kms://projects/PROJECT/locations/LOCATION/keyRings/RING/cryptoKeys/KEY/cryptoKeyVersions/1",
-    null // hoặc đường dẫn file JSON service account
-);
+    "my-bucket", "crypto/dek.encrypted.json",
+    "gcp-kms://projects/.../locations/.../keyRings/.../cryptoKeys/.../cryptoKeyVersions/1",
+    null);
+
 EnvelopeCryptoService crypto = new EnvelopeCryptoService(cfg);
-crypto.ensureDekOnGcs(); // lần đầu: tạo DEK, bọc KMS, ghi GCS
+crypto.ensureDekOnGcs(); // idempotent: create DEK + upload if missing
+
 byte[] ct = crypto.encrypt("hello".getBytes(StandardCharsets.UTF_8));
 byte[] pt = crypto.decrypt(ct);
 ```
 
-### Test / dev không có tài khoản GCP
+### Test / dev without a GCP account
 
-Dùng **KEK cục bộ (Tink)** + **`InMemoryEncryptedKeysetStore`** — cùng luồng envelope (DEK bọc bởi KEK), không gọi API Google.
+Use a **local Tink KEK** + **`InMemoryEncryptedKeysetStore`** — same envelope flow (DEK wrapped by KEK), no Google API calls.
 
 ```java
 EnvelopeCryptoService crypto = LocalEnvelopeSimulation.newService();
 crypto.ensureDekOnGcs();
-byte[] ct = crypto.encrypt("hello".getBytes(StandardCharsets.UTF_8));
-byte[] pt = crypto.decrypt(ct);
 ```
 
-Hoặc tự tạo `new EnvelopeCryptoService(new InMemoryEncryptedKeysetStore(), kekAead)` với `kekAead` lấy từ `KeysetHandle.generateNew(PredefinedAeadParameters.AES128_GCM).getPrimitive(Aead.class)` (nhớ gọi `AeadConfig.register()` trước).
+Or use `new EnvelopeEncryptionConfig(...)` with a **mock/fake** `EncryptedKeysetStore` in tests.
 
-### Quyền GCP (gợi ý)
+## Repo layout
 
-- KMS: `cloudkms.cryptoKeyVersions.useToEncrypt`, `useToDecrypt` trên KEK.
-- GCS: đọc/ghi object chứa file DEK (ví dụ `storage.objects.get/create/update`).
+```
+gcs-ksm-hsm/
+├── pom.xml                 # reactor (dependencyManagement, versions)
+├── sdk/                    # keywrap-sdk
+│   └── src/main/java/com/keywrap/crypto/
+└── examples/payara-envelope-demo/   # WAR + Payara Micro bundle
+```
 
-Thiết lập credential: biến `GOOGLE_APPLICATION_CREDENTIALS` hoặc `gcloud auth application-default login`.
+## References
+
+- [Tink](https://github.com/tink-crypto/tink-java)
+- [Tink GCP KMS](https://github.com/tink-crypto/tink-java/tree/main/kms)
+- [Google Cloud KMS](https://cloud.google.com/kms/docs)
+- [Cloud Storage](https://cloud.google.com/storage/docs)

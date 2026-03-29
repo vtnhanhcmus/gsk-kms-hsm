@@ -1,4 +1,4 @@
-package com.gcsksmhsm.crypto;
+package com.keywrap.crypto;
 
 import com.google.crypto.tink.Aead;
 import com.google.crypto.tink.KeysetHandle;
@@ -7,9 +7,9 @@ import com.google.crypto.tink.aead.PredefinedAeadParameters;
 import java.security.GeneralSecurityException;
 
 /**
- * Giả lập stack DEK + KEK + “GCS” không cần tài khoản GCP: KEK là keyset Tink AES-GCM cục bộ, kho là
- * {@link InMemoryEncryptedKeysetStore}. Luồng mã hóa giống production (envelope), chỉ thay KMS/GCS bằng
- * primitive Tink + RAM.
+ * Simulates DEK + KEK + “GCS” without a GCP account: KEK is a local Tink AES-GCM keyset, store is {@link
+ * InMemoryEncryptedKeysetStore}. Crypto flow matches production (envelope); only KMS/GCS are replaced with
+ * Tink primitives + RAM.
  */
 public final class LocalEnvelopeSimulation {
 
@@ -24,10 +24,10 @@ public final class LocalEnvelopeSimulation {
   private LocalEnvelopeSimulation() {}
 
   /**
-   * Tạo KEK cục bộ (AES-128-GCM) và service dùng kho in-memory.
+   * Creates a local KEK (AES-128-GCM) and a service using an in-memory store.
    *
-   * @param store có thể dùng chung nhiều lần nếu giữ cùng tham chiếu KEK; mỗi lần gọi factory này với
-   *     store mới sẽ tách hoàn toàn trạng thái.
+   * @param store may be shared across calls if you keep the same KEK reference; each call to this factory
+   *     with a new store is fully isolated.
    */
   public static EnvelopeCryptoService newService(InMemoryEncryptedKeysetStore store)
       throws GeneralSecurityException {
@@ -36,7 +36,7 @@ public final class LocalEnvelopeSimulation {
     return new EnvelopeCryptoService(store, kekAead);
   }
 
-  /** Kho in-memory mới + service tương ứng. */
+  /** New in-memory store and matching service. */
   public static EnvelopeCryptoService newService() throws GeneralSecurityException {
     return newService(new InMemoryEncryptedKeysetStore());
   }

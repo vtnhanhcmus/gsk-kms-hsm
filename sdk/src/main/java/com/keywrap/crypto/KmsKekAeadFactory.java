@@ -1,10 +1,10 @@
-package com.gcsksmhsm.crypto;
+package com.keywrap.crypto;
 
 import com.google.crypto.tink.Aead;
 import com.google.crypto.tink.integration.gcpkms.GcpKmsClient;
 import java.security.GeneralSecurityException;
 
-/** Tạo primitive AEAD cho KEK trên Cloud KMS (dùng bọc/giải bọc DEK trong Tink). */
+/** Builds the KEK AEAD primitive for Cloud KMS (wrap/unwrap the DEK in Tink). */
 public final class KmsKekAeadFactory {
 
   private KmsKekAeadFactory() {}
